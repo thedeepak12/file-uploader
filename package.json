@@ -1,0 +1,48 @@
+{
+  "name": "file-uploader",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:ts": "tsc",
+    "build": "npm run build:ts && npm run copy:assets",
+    "copy:assets": "copyfiles -u 1 \"src/**/*.ejs\" \"public/**/*\" \"db/**/*.sql\" dist",
+    "watch:ts": "tsc --watch",
+    "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/output.css",
+    "watch:css": "tailwindcss -i ./public/css/input.css -o ./public/css/output.css --watch",
+    "prisma:generate": "npx prisma generate",
+    "start": "node dist/app.js",
+    "dev": "concurrently \"npm run watch:ts\" \"npm run watch:css\" \"nodemon dist/app.js\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@prisma/client": "^6.16.2",
+    "@tailwindcss/cli": "^4.1.13",
+    "bcryptjs": "^3.0.2",
+    "concurrently": "^9.2.1",
+    "dotenv": "^17.2.2",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "nodemon": "^3.1.10",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/express": "^5.0.3",
+    "@types/express-session": "^1.18.2",
+    "@types/node": "^24.5.1",
+    "@types/passport": "^1.0.17",
+    "@types/passport-local": "^1.0.38",
+    "@types/pg": "^8.15.5",
+    "copyfiles": "^2.4.1",
+    "prisma": "^6.16.2",
+    "typescript": "^5.9.2"
+  }
+}
