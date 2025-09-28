@@ -1,6 +1,6 @@
 import express, { type Request, type Response } from 'express';
 import dotenv from 'dotenv';
-import { PrismaClient } from './generated/prisma';
+import authRoutes from './routes/authRoutes.js';
 
 dotenv.config();
 
@@ -11,7 +11,7 @@ app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 
-const prisma = new PrismaClient();
+app.use(authRoutes);
 
 app.get('/', (_req: Request, res: Response) => {
   res.render('layouts/main', {});

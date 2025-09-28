@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/css/output.css">
+  <title>Sign Up</title>
+</head>
+<body class="bg-gray-900">
+  <div class="bg-gray-900 flex flex-col items-center justify-center h-auto mt-25 lg:h-screen lg:mt-0 px-4 sm:px-4">
+    <div class="bg-gray-800 text-white border-[1px] border-gray-700 shadow-lg w-full sm:w-auto p-6 sm:p-8 rounded-lg mt-10 mb-10">
+      <h1 class="text-center text-2xl font-bold mb-6">Sign Up</h1>
+      <form class="flex flex-col gap-4 w-full sm:w-[400px]" action="/signup" method="POST">
+        <div class="flex flex-col gap-1">
+          <label for="email">Email</label>
+          <input class="p-2 border rounded" type="email" id="email" name="email" value="<%= typeof formData !== 'undefined' && formData.email ? formData.email : '' %>" required>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label for="password">Password</label>
+          <input class="p-2 border rounded" type="password" id="password" name="password" required>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label for="confirm-password">Confirm Password</label>
+          <input class="p-2 border rounded" type="password" id="confirm-password" name="confirmPassword" required>
+          <% if (typeof confirmError !== 'undefined' && confirmError) { %>
+            <p class="text-sm text-red-600 mt-1"><%= confirmError %></p>
+          <% } %>
+          <% if (typeof errors !== 'undefined' && errors && errors.length > 0) { %>
+            <% errors.forEach(error => { %>
+              <p class="text-sm text-red-600 mt-1"><%= error %></p>
+            <% }); %>
+          <% } %>
+        </div>
+        <button class="bg-blue-600 text-white p-2 rounded hover:bg-blue-700 cursor-pointer transition-colors" type="submit">Sign Up</button>
+      </form>
+      <p class="mt-4">Already have an account? <a href="/login" class="text-blue-500 hover:underline">Log in</a></p>
+    </div>
+  </div>
+</body>
+</html>
