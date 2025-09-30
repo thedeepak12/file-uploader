@@ -1,5 +1,6 @@
 import express, { type Request, type Response } from 'express';
 import dotenv from 'dotenv';
+import { configureAuth } from './middleware/auth.js';
 import authRoutes from './routes/authRoutes.js';
 
 dotenv.config();
@@ -10,6 +11,8 @@ const port = process.env.PORT || 3000;
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
+
+configureAuth(app);
 
 app.use(authRoutes);
 
