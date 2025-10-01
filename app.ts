@@ -1,7 +1,8 @@
-import express, { type Request, type Response } from 'express';
+import express from 'express';
 import dotenv from 'dotenv';
 import { configureAuth } from './middleware/auth.js';
 import authRoutes from './routes/authRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
 
 dotenv.config();
 
@@ -15,10 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 configureAuth(app);
 
 app.use(authRoutes);
-
-app.get('/', (_req: Request, res: Response) => {
-  res.render('layouts/main', {});
-});
+app.use(dashboardRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
