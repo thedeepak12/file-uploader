@@ -25,21 +25,74 @@
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex justify-between items-center mb-8">
-      <h2 class="text-2xl font-bold">My Files</h2>
-      <button class="px-6 py-2 bg-blue-600 rounded-md hover:bg-blue-700 transition-all cursor-pointer font-medium">
+      <h2 class="text-2xl font-bold">My Drive</h2>
+      <button id="addNewBtn" class="px-6 py-2 bg-blue-600 rounded-md hover:bg-blue-700 transition-all cursor-pointer font-medium">
         Add New
       </button>
     </div>
 
-    <div class="rounded-lg p-12 text-center">
-      <div class="mx-auto w-24 h-24 mb-6">
-        <img src="/icons/folder.svg" alt="Folder" class="w-full h-full opacity-40">
+    <% if (folders && folders.length > 0) { %>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        <% folders.forEach(folder => { %>
+          <div class="flex flex-col items-center cursor-pointer group">
+            <div class="w-full aspect-square bg-gray-800 border border-gray-700 rounded-lg flex items-center justify-center mb-3 group-hover:bg-gray-750 transition-colors">
+              <img src="/icons/folder.svg" alt="Folder" class="w-16 h-16 opacity-60">
+            </div>
+            <h3 class="text-sm text-center text-gray-300 truncate w-full"><%= folder.name %></h3>
+          </div>
+        <% }) %>
       </div>
-      <h3 class="text-xl font-semibold text-gray-300 mb-2">No folders yet</h3>
-      <p class="text-gray-400 max-w-md mx-auto">
-        Get started by creating a folder using the <strong>Add New</strong> button
-      </p>
-    </div>
+    <% } else { %>
+      <div class="rounded-lg p-12 text-center">
+        <div class="mx-auto w-24 h-24 mb-6">
+          <img src="/icons/folder.svg" alt="Folder" class="w-full h-full opacity-40">
+        </div>
+        <h3 class="text-xl font-semibold text-gray-300 mb-2">No folders yet</h3>
+        <p class="text-gray-400 max-w-md mx-auto">
+          Get started by creating a folder using the <strong>Add New</strong> button
+        </p>
+      </div>
+    <% } %>
   </main>
+
+  <div id="folderModal" class="hidden fixed inset-0 z-50" style="background-color: rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px);">
+    <div class="flex items-center justify-center min-h-screen">
+    <div class="bg-gray-800 rounded-lg p-8 max-w-md w-full mx-4 relative">
+      <h2 class="text-2xl font-bold mb-6">New Folder</h2>
+      <form action="/folders" method="POST">
+        <input type="text" name="name" placeholder="Folder Name" required
+          class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-6">
+        <div class="flex gap-3 justify-end">
+          <button type="button" id="closeModal" class="px-6 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 cursor-pointer transition-all font-medium">
+            Cancel
+          </button>
+          <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer transition-all font-medium">
+            Confirm
+          </button>
+        </div>
+      </form>
+    </div>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.getElementById('folderModal');
+    const addNewBtn = document.getElementById('addNewBtn');
+    const closeModalBtn = document.getElementById('closeModal');
+
+    addNewBtn.addEventListener('click', () => {
+      modal.classList.remove('hidden');
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.add('hidden');
+      }
+    });
+  </script>
 </body>
 </html>

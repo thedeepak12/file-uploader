@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import { configureAuth } from './middleware/auth.js';
 import authRoutes from './routes/authRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import folderRoutes from './routes/folderRoutes.js';
 
 dotenv.config();
 
@@ -16,6 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 configureAuth(app);
 
 app.use(authRoutes);
+app.use(folderRoutes);
 app.use(dashboardRoutes);
 
 app.listen(port, () => {
