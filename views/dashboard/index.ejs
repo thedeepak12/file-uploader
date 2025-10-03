@@ -34,11 +34,21 @@
     <% if (folders && folders.length > 0) { %>
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
         <% folders.forEach(folder => { %>
-          <div class="flex flex-col items-center cursor-pointer group">
-            <div class="w-full aspect-square bg-gray-800 border border-gray-700 rounded-lg flex items-center justify-center mb-3 group-hover:bg-gray-750 transition-colors">
-              <img src="/icons/folder.svg" alt="Folder" class="w-16 h-16 opacity-60">
+          <div class="relative group">
+            <a href="/folders/<%= folder.id %>" class="flex flex-col items-center cursor-pointer p-2">
+              <div class="w-full aspect-square bg-gray-800 border border-gray-700 rounded-lg flex items-center justify-center mb-3 group-hover:bg-gray-750 transition-colors">
+                <img src="/icons/folder.svg" alt="Folder" class="w-16 h-16 opacity-60">
+              </div>
+              <h3 class="text-sm text-center text-gray-300 truncate w-full"><%= folder.name %></h3>
+            </a>
+            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-3">
+              <button class="edit-folder-btn p-1 rounded-full hover:bg-gray-700" data-folder-id="<%= folder.id %>" data-folder-name="<%= folder.name %>">
+                <img src="/icons/edit.svg" alt="Edit" class="w-5 h-5">
+              </button>
+              <button class="delete-folder-btn p-1 rounded-full hover:bg-gray-700" data-folder-id="<%= folder.id %>" data-folder-name="<%= folder.name %>">
+                <img src="/icons/delete.svg" alt="Delete" class="w-5 h-5">
+              </button>
             </div>
-            <h3 class="text-sm text-center text-gray-300 truncate w-full"><%= folder.name %></h3>
           </div>
         <% }) %>
       </div>
@@ -55,7 +65,7 @@
     <% } %>
   </main>
 
-  <div id="folderModal" class="hidden fixed inset-0 z-50" style="background-color: rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px);">
+  <div id="createFolderModal" class="hidden fixed inset-0 z-50" style="background-color: rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px);">
     <div class="flex items-center justify-center min-h-screen">
     <div class="bg-gray-800 rounded-lg p-8 max-w-md w-full mx-4 relative">
       <h2 class="text-2xl font-bold mb-6">New Folder</h2>
@@ -63,7 +73,7 @@
         <input type="text" name="name" placeholder="Folder Name" required
           class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-6">
         <div class="flex gap-3 justify-end">
-          <button type="button" id="closeModal" class="px-6 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 cursor-pointer transition-all font-medium">
+          <button type="button" id="closeCreateModal" class="px-6 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 cursor-pointer transition-all font-medium">
             Cancel
           </button>
           <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer transition-all font-medium">
@@ -75,24 +85,45 @@
     </div>
   </div>
 
-  <script>
-    const modal = document.getElementById('folderModal');
-    const addNewBtn = document.getElementById('addNewBtn');
-    const closeModalBtn = document.getElementById('closeModal');
+  <div id="editFolderModal" class="hidden fixed inset-0 z-50" style="background-color: rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px);">
+    <div class="flex items-center justify-center min-h-screen">
+      <div class="bg-gray-800 rounded-lg p-8 max-w-md w-full mx-4 relative">
+        <h2 class="text-2xl font-bold mb-6">Edit Folder</h2>
+        <form id="editFolderForm" method="POST">
+          <input type="text" name="name" id="editFolderName" placeholder="Folder Name" required
+            class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-6">
+          <div class="flex gap-3 justify-end">
+            <button type="button" class="close-modal px-6 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 cursor-pointer transition-all font-medium">
+              Cancel
+            </button>
+            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer transition-all font-medium">
+              Save
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
-    addNewBtn.addEventListener('click', () => {
-      modal.classList.remove('hidden');
-    });
+  <div id="deleteFolderModal" class="hidden fixed inset-0 z-50" style="background-color: rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px);">
+    <div class="flex items-center justify-center min-h-screen">
+      <div class="bg-gray-800 rounded-lg p-8 max-w-md w-full mx-4 relative">
+        <h2 class="text-2xl font-bold mb-4">Delete Folder</h2>
+        <p class="text-gray-400 mb-6">Are you sure you want to delete "<span id="deleteFolderName"></span>"? This action cannot be undone.</p>
+        <form id="deleteFolderForm" method="POST">
+          <div class="flex gap-3 justify-end">
+            <button type="button" class="close-modal px-6 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 cursor-pointer transition-all font-medium">
+              Cancel
+            </button>
+            <button type="submit" class="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 cursor-pointer transition-all font-medium">
+              Delete
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
-    closeModalBtn.addEventListener('click', () => {
-      modal.classList.add('hidden');
-    });
-
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        modal.classList.add('hidden');
-      }
-    });
-  </script>
+  <script type="module" src="/dashboardModal.js"></script>
 </body>
 </html>
