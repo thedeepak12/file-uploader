@@ -26,18 +26,69 @@
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="mb-8">
       <a href="/" class="text-blue-400 hover:underline">&larr; Back to all folders</a>
-      <h2 class="text-2xl font-bold mt-4"><%= folder.name %></h2>
+      <div class="flex justify-between items-center mt-4">
+        <h2 class="text-2xl font-bold"><%= folder.name %></h2>
+        <button id="addFileBtn" class="px-6 py-2 bg-blue-600 rounded-md hover:bg-blue-700 transition-all cursor-pointer font-medium">
+          Add New
+        </button>
+      </div>
     </div>
 
-    <div class="rounded-lg p-12 text-center">
-      <div class="mx-auto w-24 h-24 mb-6">
-        <img src="/icons/files.svg" alt="Files" class="w-full h-full opacity-40">
+    <% if (files && files.length > 0) { %>
+      <div class="bg-gray-800 rounded-lg overflow-hidden">
+        <div class="divide-y divide-gray-700">
+          <% files.forEach(file => { %>
+            <div class="px-6 py-4 hover:bg-gray-750 transition-colors">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4 flex-1 min-w-0">
+                  <img src="/icons/files.svg" alt="File" class="w-6 h-6 opacity-60 flex-shrink-0">
+                  <span class="text-white font-medium truncate" title="<%= file.name %>"><%= file.name %></span>
+                </div>
+                <div class="flex items-center space-x-8 text-sm text-gray-400 flex-shrink-0">
+                  <span><%= (file.size / 1024).toFixed(1) %> KB</span>
+                  <span><%= new Date(file.modifiedAt).getFullYear() %>-<%= (new Date(file.modifiedAt).getMonth() + 1).toString().padStart(2, '0') %>-<%= new Date(file.modifiedAt).getDate().toString().padStart(2, '0') %></span>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
       </div>
-      <h3 class="text-xl font-semibold text-gray-300 mb-2">No files yet</h3>
-      <p class="text-gray-400 max-w-md mx-auto">
-        Upload files by using the <strong>Add New</strong> button
-      </p>
-    </div>
+    <% } else { %>
+      <div class="rounded-lg p-12 text-center">
+        <div class="mx-auto w-24 h-24 mb-6">
+          <img src="/icons/files.svg" alt="Files" class="w-full h-full opacity-40">
+        </div>
+        <h3 class="text-xl font-semibold text-gray-300 mb-2">No files yet</h3>
+        <p class="text-gray-400 max-w-md mx-auto">
+          Upload files by using the <strong>Add New</strong> button
+        </p>
+      </div>
+    <% } %>
   </main>
+
+  <div id="uploadFileModal" class="hidden fixed inset-0 z-50" style="background-color: rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px);">
+    <div class="flex items-center justify-center min-h-screen">
+      <div class="bg-gray-800 rounded-lg p-8 max-w-md w-full mx-4 relative">
+        <h2 class="text-2xl font-bold mb-6">Upload File</h2>
+        <form action="/folders/<%= folder.id %>/files" method="POST" enctype="multipart/form-data">
+          <div class="mb-6">
+            <label for="fileInput" class="block text-sm font-medium text-gray-300 mb-2">Choose File</label>
+            <input type="file" id="fileInput" name="file" required
+              class="w-full px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-gray-600 file:text-white focus:outline-none cursor-pointer">
+          </div>
+          <div class="flex gap-3 justify-end">
+            <button type="button" id="closeUploadModal" class="px-6 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 cursor-pointer transition-all font-medium">
+              Cancel
+            </button>
+            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer transition-all font-medium">
+              Upload
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/folderModal.js"></script>
 </body>
 </html>

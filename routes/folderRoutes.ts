@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { createFolder, getFolder, updateFolder, deleteFolder } from '../controllers/folderController.js';
+import { createFolder, getFolder, updateFolder, deleteFolder, uploadFile, upload } from '../controllers/folderController.js';
 
 const router = Router();
 
@@ -24,5 +24,6 @@ router.post('/folders', isAuthenticated, createFolder as any);
 router.get('/folders/:id', isAuthenticated, getFolder as any);
 router.put('/folders/:id', isAuthenticated, updateFolder as any);
 router.delete('/folders/:id', isAuthenticated, deleteFolder as any);
+router.post('/folders/:id/files', isAuthenticated, upload.single('file'), uploadFile as any);
 
 export default router;
