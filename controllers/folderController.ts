@@ -135,11 +135,37 @@ export async function deleteFolder(req: AuthenticatedRequest, res: Response): Pr
   }
 
   const userId = user.id;
+  const folderId = parseInt(id);
 
   try {
+    const files = await prisma.file.findMany({
+      where: {
+        folderId: folderId,
+        ownerId: userId
+      },
+      select: {
+        name: true,
+        storageName: true
+      }
+    });
+
+    for (const file of files) {
+      const filePath = path.join('uploads', file.storageName || file.name);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+
+    await prisma.file.deleteMany({
+      where: {
+        folderId: folderId,
+        ownerId: userId
+      }
+    });
+
     await prisma.folder.deleteMany({
       where: {
-        id: parseInt(id),
+        id: folderId,
         ownerId: userId
       }
     });
@@ -152,14 +178,14 @@ export async function deleteFolder(req: AuthenticatedRequest, res: Response): Pr
 }
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: (_req, _file, cb) => {
     const uploadDir = 'uploads';
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
     cb(null, uploadDir);
   },
-  filename: (req, file, cb) => {
+  filename: (_req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
   }
@@ -170,7 +196,7 @@ export const upload = multer({
   limits: {
     fileSize: 10 * 1024 * 1024
   },
-  fileFilter: (req, file, cb) => {
+  fileFilter: (_req, _file, cb) => {
     cb(null, true);
   }
 });
@@ -213,7 +239,8 @@ export async function uploadFile(req: AuthenticatedRequest, res: Response): Prom
 
     await prisma.file.create({
       data: {
-        name: file.originalname,
+        name: file.originalname, 
+        storageName: file.filename,
         size: file.size,
         ownerId: userId,
         folderId: folderId
@@ -227,9 +254,58 @@ export async function uploadFile(req: AuthenticatedRequest, res: Response): Prom
       }
     });
 
-    res.redirect(`/folders/${folderId}`);
+    res.redirect(`/folders/${id}`);
   } catch (error) {
     console.error('Error uploading file:', error);
     res.status(500).send('Error uploading file');
+  }
+}
+
+export async function downloadFile(req: AuthenticatedRequest, res: Response): Promise<void> {
+  const user = req.user;
+  if (!user) {
+    res.status(401).send('Unauthorized');
+    return;
+  }
+
+  const { id } = req.params;
+  if (!id) {
+    res.status(400).send('File ID is required');
+    return;
+  }
+
+  const userId = user.id;
+  const fileId = parseInt(id);
+
+  try {
+    const file = await prisma.file.findFirst({
+      where: {
+        id: fileId,
+        ownerId: userId
+      },
+      select: {
+        name: true,
+        storageName: true
+      }
+    });
+
+    if (!file) {
+      res.status(404).send('File not found');
+      return;
+    }
+
+    const filePath = path.join('uploads', file.storageName || file.name);
+    if (!fs.existsSync(filePath)) {
+      res.status(404).send('File not found on server');
+      return;
+    }
+
+    res.setHeader('Content-Disposition', `attachment; filename="${file.name}"`);
+    res.setHeader('Content-Type', 'application/octet-stream');
+
+    res.sendFile(path.resolve(filePath));
+  } catch (error) {
+    console.error('Error downloading file:', error);
+    res.status(500).send('Error downloading file');
   }
 }

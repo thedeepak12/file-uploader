@@ -47,6 +47,9 @@
                 <div class="flex items-center space-x-8 text-sm text-gray-400 flex-shrink-0">
                   <span><%= (file.size / 1024).toFixed(1) %> KB</span>
                   <span><%= new Date(file.modifiedAt).getFullYear() %>-<%= (new Date(file.modifiedAt).getMonth() + 1).toString().padStart(2, '0') %>-<%= new Date(file.modifiedAt).getDate().toString().padStart(2, '0') %></span>
+                  <button class="download-file-btn p-1 rounded hover:bg-gray-600 transition-colors" data-file-id="<%= file.id %>" data-file-name="<%= file.name %>" title="Download file">
+                    <img src="/icons/download.svg" alt="Download" class="w-6 h-6 cursor-pointer">
+                  </button>
                 </div>
               </div>
             </div>

@@ -22,6 +22,22 @@ function initializeFolderModals() {
       }
     });
   }
+
+  document.querySelectorAll('.download-file-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const target = e.currentTarget as HTMLElement;
+      const fileId = target.dataset.fileId;
+
+      if (fileId) {
+        const link = document.createElement('a');
+        link.href = `/files/${fileId}/download`;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    });
+  });
 }
 
 document.addEventListener('DOMContentLoaded', initializeFolderModals);
