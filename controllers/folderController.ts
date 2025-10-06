@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import { PrismaClient, User } from '@prisma/client';
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
+import cloudinary from '../config/cloudinary.js';
+import http from 'http';
+import https from 'https';
 
 const prisma = new PrismaClient();
 
@@ -150,9 +151,20 @@ export async function deleteFolder(req: AuthenticatedRequest, res: Response): Pr
     });
 
     for (const file of files) {
-      const filePath = path.join('uploads', file.storageName || file.name);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
+      if (file.storageName) {
+        const fileExtension = file.name.split('.').pop()?.toLowerCase();
+        let resourceType = 'raw';
+        
+        if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(fileExtension || '')) {
+          resourceType = 'image';
+        } 
+        else if (['mp4', 'mov', 'avi', 'wmv', 'flv', 'webm'].includes(fileExtension || '')) {
+          resourceType = 'video';
+        }
+        
+        await cloudinary.uploader.destroy(file.storageName, {
+          resource_type: resourceType
+        });
       }
     }
 
@@ -177,22 +189,8 @@ export async function deleteFolder(req: AuthenticatedRequest, res: Response): Pr
   }
 }
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    const uploadDir = 'uploads';
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (_req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
 export const upload = multer({ 
-  storage: storage,
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 10 * 1024 * 1024
   },
@@ -237,10 +235,27 @@ export async function uploadFile(req: AuthenticatedRequest, res: Response): Prom
       return;
     }
 
+    const uploadResult = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream({
+        resource_type: 'auto',
+        folder: 'file-uploader' + '/' + user.email + '/' + folder.name,
+        public_id: `${userId}_${folderId}_${Date.now()}`,
+      }, (error, result) => {
+        if (error) {
+          console.error('Error uploading to Cloudinary:', error);
+          reject(error);
+          return;
+        }
+        resolve(result);
+      });
+      
+      uploadStream.end(file.buffer);
+    });
+
     await prisma.file.create({
       data: {
         name: file.originalname, 
-        storageName: file.filename,
+        storageName: (uploadResult as any).public_id,
         size: file.size,
         ownerId: userId,
         folderId: folderId
@@ -260,8 +275,128 @@ export async function uploadFile(req: AuthenticatedRequest, res: Response): Prom
     res.status(500).send('Error uploading file');
   }
 }
+async function fetchWithRedirect(url: string, res: Response, redirectCount: number = 0): Promise<void> {
+  if (redirectCount > 5) {
+    console.error('Too many redirects');
+    res.status(500).send('Error downloading file: Too many redirects');
+    return;
+  }
+
+  const protocol = url.startsWith('https:') ? https : http;
+
+  const request = protocol.get(url, (response) => {
+    if (response.statusCode && response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+      const location = response.headers.location;
+      const absoluteLocation = new URL(location, url).toString();
+      fetchWithRedirect(absoluteLocation, res, redirectCount + 1);
+      return;
+    }
+
+    if (!response.statusCode || response.statusCode !== 200) {
+      console.error(`Failed to download file: Status code ${response.statusCode}`);
+      res.status(500).send(`Error downloading file: Server returned status ${response.statusCode}`);
+      return;
+    }
+
+    if (response.headers['content-type']) {
+      res.setHeader('Content-Type', response.headers['content-type']);
+    }
+    if (response.headers['content-length']) {
+      res.setHeader('Content-Length', response.headers['content-length']);
+    }
+    if (response.headers['content-disposition']) {
+      res.setHeader('Content-Disposition', response.headers['content-disposition']);
+    }
+
+    response.pipe(res);
+  });
+
+  request.on('error', (err) => {
+    console.error('Error streaming file:', err);
+    res.status(500).send('Error downloading file');
+  });
+
+  request.setTimeout(30000, () => {
+    console.error('Request timeout');
+    request.destroy();
+    res.status(500).send('Error downloading file: Request timeout');
+  });
+}
 
 export async function downloadFile(req: AuthenticatedRequest, res: Response): Promise<void> {
+  const user = req.user;
+  if (!user) {
+    res.status(401).send('Unauthorized');
+    return;
+  }
+
+  const { id } = req.params;
+  if (!id) {
+    res.status(400).send('File ID is required');
+    return;
+  }
+
+  const userId = user.id;
+  const fileId = parseInt(id);
+
+  try {
+    const file = await prisma.file.findFirst({
+      where: {
+        id: fileId,
+        ownerId: userId
+      },
+      select: {
+        name: true,
+        storageName: true,
+        size: true
+      }
+    });
+
+    if (!file) {
+      res.status(404).send('File not found');
+      return;
+    }
+
+    if (!file.storageName) {
+      res.status(404).send('File not found in storage');
+      return;
+    }
+
+    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    let resourceType = 'raw';
+    
+    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(fileExtension || '')) {
+      resourceType = 'image';
+    } 
+    else if (['mp4', 'mov', 'avi', 'wmv', 'flv', 'webm'].includes(fileExtension || '')) {
+      resourceType = 'video';
+    }
+    
+    const fileUrl = cloudinary.url(file.storageName, {
+      resource_type: resourceType,
+      secure: true,
+      type: 'upload',
+      flags: 'attachment'
+    });
+
+    console.log('Generated fileUrl:', fileUrl);
+    console.log('Resource type:', resourceType);
+    console.log('File details:', {
+      name: file.name,
+      storageName: file.storageName,
+      size: file.size
+    });
+
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(file.name)}"`);
+
+    await fetchWithRedirect(fileUrl, res);
+  } catch (error) {
+    console.error('Error downloading file:', error);
+    res.status(500).send('Error downloading file');
+  }
+}
+
+export async function downloadFileDirect(req: AuthenticatedRequest, res: Response): Promise<void> {
   const user = req.user;
   if (!user) {
     res.status(401).send('Unauthorized');
@@ -289,21 +424,33 @@ export async function downloadFile(req: AuthenticatedRequest, res: Response): Pr
       }
     });
 
-    if (!file) {
+    if (!file || !file.storageName) {
       res.status(404).send('File not found');
       return;
     }
 
-    const filePath = path.join('uploads', file.storageName || file.name);
-    if (!fs.existsSync(filePath)) {
-      res.status(404).send('File not found on server');
-      return;
+    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    let resourceType = 'raw';
+    
+    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(fileExtension || '')) {
+      resourceType = 'image';
+    } 
+    else if (['mp4', 'mov', 'avi', 'wmv', 'flv', 'webm'].includes(fileExtension || '')) {
+      resourceType = 'video';
     }
+    
+    const fileUrl = cloudinary.url(file.storageName, {
+      resource_type: resourceType,
+      secure: true,
+      type: 'upload',
+      sign_url: true,
+      expires_at: Math.floor(Date.now() / 1000) + 300
+    });
 
-    res.setHeader('Content-Disposition', `attachment; filename="${file.name}"`);
-    res.setHeader('Content-Type', 'application/octet-stream');
+    console.log('Signed fileUrl:', fileUrl);
 
-    res.sendFile(path.resolve(filePath));
+    res.redirect(fileUrl);
+    
   } catch (error) {
     console.error('Error downloading file:', error);
     res.status(500).send('Error downloading file');
