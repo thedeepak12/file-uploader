@@ -7,10 +7,10 @@
   <title>Login</title>
 </head>
 <body class="bg-gray-900">
-  <div class="bg-gray-900 flex flex-col items-center justify-center h-screen">
-    <div class="bg-gray-800 border-[1px] border-gray-700 text-white p-8 rounded-lg">
+  <div class="bg-gray-900 flex flex-col items-center justify-center h-auto mt-25 lg:h-screen lg:mt-0 px-4 sm:px-4">
+    <div class="bg-gray-800 text-white border-[1px] border-gray-700 shadow-lg w-full sm:w-auto p-6 sm:p-8 rounded-lg mt-10 mb-10">
       <h1 class="text-center text-2xl font-bold mb-6">Log In</h1>
-      <form class="flex flex-col gap-4 w-[400px]" action="/login" method="POST">
+      <form class="flex flex-col gap-4 w-full sm:w-[400px]" action="/login" method="POST">
         <div class="flex flex-col gap-1">
           <label for="email">Email</label>
           <input class="p-2 border rounded" type="email" id="email" name="email" required>
