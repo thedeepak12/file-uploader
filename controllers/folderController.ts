@@ -456,3 +456,76 @@ export async function downloadFileDirect(req: AuthenticatedRequest, res: Respons
     res.status(500).send('Error downloading file');
   }
 }
+
+export async function deleteFile(req: AuthenticatedRequest, res: Response): Promise<void> {
+  const user = req.user;
+  if (!user) {
+    res.status(401).send('Unauthorized');
+    return;
+  }
+
+  const { id } = req.params;
+  if (!id) {
+    res.status(400).send('File ID is required');
+    return;
+  }
+
+  const userId = user.id;
+  const fileId = parseInt(id);
+
+  try {
+    const file = await prisma.file.findFirst({
+      where: {
+        id: fileId,
+        ownerId: userId
+      },
+      select: {
+        name: true,
+        storageName: true,
+        size: true,
+        folderId: true
+      }
+    });
+
+    if (!file) {
+      res.status(404).send('File not found');
+      return;
+    }
+
+    if (file.storageName) {
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+      let resourceType = 'raw';
+      
+      if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(fileExtension || '')) {
+        resourceType = 'image';
+      } 
+      else if (['mp4', 'mov', 'avi', 'wmv', 'flv', 'webm'].includes(fileExtension || '')) {
+        resourceType = 'video';
+      }
+      
+      await cloudinary.uploader.destroy(file.storageName, {
+        resource_type: resourceType
+      });
+    }
+
+    await prisma.file.delete({
+      where: {
+        id: fileId
+      }
+    });
+
+    await prisma.folder.update({
+      where: { id: file.folderId },
+      data: {
+        size: {
+          decrement: file.size
+        }
+      }
+    });
+
+    res.redirect(`/folders/${file.folderId}`);
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    res.status(500).send('Error deleting file');
+  }
+}

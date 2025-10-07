@@ -42,12 +42,18 @@
               <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4 flex-1 min-w-0">
                   <img src="/icons/files.svg" alt="File" class="w-6 h-6 opacity-60 flex-shrink-0">
-                  <span class="text-white font-medium truncate" title="<%= file.name %>"><%= file.name %></span>
+                  <span class="text-white font-medium truncate mr-8" title="<%= file.name %>"><%= file.name %></span>
                 </div>
-                <div class="flex items-center space-x-8 text-sm text-gray-400 flex-shrink-0">
-                  <span><%= (file.size / 1024).toFixed(1) %> KB</span>
-                  <span><%= new Date(file.modifiedAt).getFullYear() %>-<%= (new Date(file.modifiedAt).getMonth() + 1).toString().padStart(2, '0') %>-<%= new Date(file.modifiedAt).getDate().toString().padStart(2, '0') %></span>
-                  <button class="download-file-btn p-1 rounded hover:bg-gray-600 transition-colors" data-file-id="<%= file.id %>" data-file-name="<%= file.name %>" title="Download file">
+                <div class="flex items-center gap-x-8 text-sm text-gray-400 flex-shrink-0">
+                  <span class="hidden sm:inline"><%= (file.size / 1024).toFixed(1) %> KB</span>
+                  <span class="hidden sm:inline"><%= new Date(file.modifiedAt).getFullYear() %>-<%= (new Date(file.modifiedAt).getMonth() + 1).toString().padStart(2, '0') %>-<%= new Date(file.modifiedAt).getDate().toString().padStart(2, '0') %></span>
+                  <button class="download-file-btn p-1 rounded hover:bg-gray-600 transition-colors hidden sm:block -ml-2" data-file-id="<%= file.id %>" data-file-name="<%= file.name %>" title="Download file">
+                    <img src="/icons/download.svg" alt="Download" class="w-6 h-6 cursor-pointer">
+                  </button>
+                  <button class="delete-file-btn p-1 -ml-2 rounded hover:bg-gray-600 transition-colors hidden sm:block" data-file-id="<%= file.id %>" data-file-name="<%= file.name %>" title="Delete file">
+                    <img src="/icons/delete.svg" alt="Delete" class="w-6 h-6 cursor-pointer">
+                  </button>
+                  <button class="download-file-btn p-1 rounded hover:bg-gray-600 transition-colors sm:hidden" data-file-id="<%= file.id %>" data-file-name="<%= file.name %>" title="Download file">
                     <img src="/icons/download.svg" alt="Download" class="w-6 h-6 cursor-pointer">
                   </button>
                 </div>
@@ -85,6 +91,25 @@
             </button>
             <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer transition-all font-medium">
               Upload
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="deleteFileModal" class="hidden fixed inset-0 z-50" style="background-color: rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px);">
+    <div class="flex items-center justify-center min-h-screen">
+      <div class="bg-gray-800 rounded-lg p-8 max-w-md w-full mx-4 relative">
+        <h2 class="text-2xl font-bold mb-4">Delete File</h2>
+        <p class="text-gray-400 mb-6">Are you sure you want to delete "<span id="deleteFileName"></span>"? This action cannot be undone.</p>
+        <form id="deleteFileForm" method="POST">
+          <div class="flex gap-3 justify-end">
+            <button type="button" class="close-modal px-6 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 cursor-pointer transition-all font-medium">
+              Cancel
+            </button>
+            <button type="submit" class="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 cursor-pointer transition-all font-medium">
+              Delete
             </button>
           </div>
         </form>
