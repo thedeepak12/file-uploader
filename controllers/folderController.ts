@@ -161,6 +161,15 @@ export async function deleteFolder(req: AuthenticatedRequest, res: Response): Pr
         else if (['mp4', 'mov', 'avi', 'wmv', 'flv', 'webm'].includes(fileExtension || '')) {
           resourceType = 'video';
         }
+        else if (['mp3', 'wav', 'flac', 'aac', 'ogg', 'm4a'].includes(fileExtension || '')) {
+          resourceType = 'audio';
+        }
+        else if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'tgz', 'tbz2', 'txz'].includes(fileExtension || '')) {
+          resourceType = 'raw';
+        }
+        else if (['txt', 'md', 'json', 'xml', 'html', 'css', 'js', 'ts', 'py', 'java', 'cpp', 'c', 'php', 'rb', 'sh', 'yml', 'yaml', 'ini', 'cfg', 'conf'].includes(fileExtension || '')) {
+          resourceType = 'raw';
+        }
         
         await cloudinary.uploader.destroy(file.storageName, {
           resource_type: resourceType
@@ -371,6 +380,15 @@ export async function downloadFile(req: AuthenticatedRequest, res: Response): Pr
     else if (['mp4', 'mov', 'avi', 'wmv', 'flv', 'webm'].includes(fileExtension || '')) {
       resourceType = 'video';
     }
+    else if (['mp3', 'wav', 'flac', 'aac', 'ogg', 'm4a'].includes(fileExtension || '')) {
+      resourceType = 'audio';
+    }
+    else if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'tgz', 'tbz2', 'txz'].includes(fileExtension || '')) {
+      resourceType = 'raw';
+    }
+    else if (['txt', 'md', 'json', 'xml', 'html', 'css', 'js', 'ts', 'py', 'java', 'cpp', 'c', 'php', 'rb', 'sh', 'yml', 'yaml', 'ini', 'cfg', 'conf'].includes(fileExtension || '')) {
+      resourceType = 'raw';
+    }
     
     const fileUrl = cloudinary.url(file.storageName, {
       resource_type: resourceType,
@@ -438,6 +456,15 @@ export async function downloadFileDirect(req: AuthenticatedRequest, res: Respons
     else if (['mp4', 'mov', 'avi', 'wmv', 'flv', 'webm'].includes(fileExtension || '')) {
       resourceType = 'video';
     }
+    else if (['mp3', 'wav', 'flac', 'aac', 'ogg', 'm4a'].includes(fileExtension || '')) {
+      resourceType = 'audio';
+    }
+    else if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'tgz', 'tbz2', 'txz'].includes(fileExtension || '')) {
+      resourceType = 'raw';
+    }
+    else if (['txt', 'md', 'json', 'xml', 'html', 'css', 'js', 'ts', 'py', 'java', 'cpp', 'c', 'php', 'rb', 'sh', 'yml', 'yaml', 'ini', 'cfg', 'conf'].includes(fileExtension || '')) {
+      resourceType = 'raw';
+    }
     
     const fileUrl = cloudinary.url(file.storageName, {
       resource_type: resourceType,
@@ -501,6 +528,15 @@ export async function deleteFile(req: AuthenticatedRequest, res: Response): Prom
       } 
       else if (['mp4', 'mov', 'avi', 'wmv', 'flv', 'webm'].includes(fileExtension || '')) {
         resourceType = 'video';
+      }
+      else if (['mp3', 'wav', 'flac', 'aac', 'ogg', 'm4a'].includes(fileExtension || '')) {
+        resourceType = 'audio';
+      }
+      else if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'tgz', 'tbz2', 'txz'].includes(fileExtension || '')) {
+        resourceType = 'raw';
+      }
+      else if (['txt', 'md', 'json', 'xml', 'html', 'css', 'js', 'ts', 'py', 'java', 'cpp', 'c', 'php', 'rb', 'sh', 'yml', 'yaml', 'ini', 'cfg', 'conf'].includes(fileExtension || '')) {
+        resourceType = 'raw';
       }
       
       await cloudinary.uploader.destroy(file.storageName, {
